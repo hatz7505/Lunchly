@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+
+<a class="btn btn-primary" style="float: right" href="/add/">Add a Customer</a></p>
+
+<h1>Top Ten Customers <i class="far fa-grin-hearts"></i></h1>
+
+<ul style="column-count: 4">
+  {% if customers.length === 0 %}
+    <h3>No customers yet.<i class="fas fa-sad-cry"></i></h3>
+  {% endif %}
+  {% for customer in customers %}
+  <li>{{ customer.reservations.length }} <a href="/{{ customer.id }}/">{{ customer.fullName() }}</a></li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

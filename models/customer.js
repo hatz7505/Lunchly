@@ -26,7 +26,7 @@ class Customer {
        FROM customers
        ORDER BY last_name, first_name`
     );
-    return results.rows.map(c => new Customer(c));
+    return results.rows.map((c) => new Customer(c));
   }
 
   /** get a customer by ID. */
@@ -51,6 +51,57 @@ class Customer {
     }
 
     return new Customer(customer);
+  }
+
+  /** get list of customers that match search */
+
+  static async search(term) {
+    const results = await db.query(
+      `SELECT id, 
+         first_name AS "firstName",  
+         last_name AS "lastName", 
+         phone, 
+         notes
+       FROM customers
+       WHERE LOWER(first_name) LIKE $1 OR LOWER(last_name) LIKE $1
+       ORDER BY last_name, first_name`,
+      [`%${term.toLowerCase()}%`]
+    );
+    return results.rows.map((c) => new Customer(c));
+  }
+
+  /** get list of top 10 customers with most reservations */
+
+  static async topTen() {
+    const results = await db.query(
+      `SELECT c.id, 
+         first_name AS "firstName",  
+         last_name AS "lastName", 
+         phone, 
+         c.notes, 
+         count(*) AS reservations
+         FROM customers c JOIN reservations ON c.id = customer_id 
+         GROUP BY c.id ORDER BY reservations DESC LIMIT 10`
+    );
+    let customers = results.rows.map((c) => new Customer(c));
+    for (let customer of customers) {
+      customer["reservations"] = await customer.getReservations();
+    }
+    return customers;
+    // ?? calling await within a map a no no ??
+
+    //   const customers = results.rows.map(async function(c) { 
+    //     let customer = new Customer(c);
+    //     customer['reservations'] = await customer.getReservations();
+    //     return customer;
+    // //  });
+    //  return customers;
+  }
+
+  /** get full name for this customer. */
+
+  fullName() {
+    return `${this.firstName} ${this.lastName}`;
   }
 
   /** get all reservations for this customer. */
